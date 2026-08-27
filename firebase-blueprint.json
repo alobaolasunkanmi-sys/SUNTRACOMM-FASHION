@@ -1,0 +1,81 @@
+{
+  "entities": {
+    "Business": {
+      "title": "Business",
+      "description": "Tenant business registered on TailorSync",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 100 },
+        "type": { "type": "string", "enum": ["tailoring", "laundry", "both"] },
+        "registrationNumber": { "type": "string", "maxLength": 50 },
+        "ownerName": { "type": "string", "maxLength": 100 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "email": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["active", "disabled", "suspended", "archived"] },
+        "currency": { "type": "string", "maxLength": 10 }
+      },
+      "required": ["name", "type", "ownerName"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Platform user account (SuperAdmin, Admin, Staff)",
+      "type": "object",
+      "properties": {
+        "businessId": { "type": "string", "maxLength": 64 },
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 100 },
+        "role": { "type": "string", "enum": ["superadmin", "admin", "staff"] },
+        "status": { "type": "string", "enum": ["active", "inactive", "suspended"] }
+      },
+      "required": ["name", "email", "role"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Customer registered under a business",
+      "type": "object",
+      "properties": {
+        "businessId": { "type": "string", "maxLength": 64 },
+        "fullName": { "type": "string", "maxLength": 100 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "whatsappNumber": { "type": "string", "maxLength": 30 },
+        "email": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["new", "active", "returning", "at_risk", "inactive"] }
+      },
+      "required": ["businessId", "fullName"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Tailoring or Laundry order",
+      "type": "object",
+      "properties": {
+        "orderNumber": { "type": "string", "maxLength": 50 },
+        "businessId": { "type": "string", "maxLength": 64 },
+        "customerId": { "type": "string", "maxLength": 64 },
+        "category": { "type": "string", "enum": ["tailoring", "laundry"] },
+        "status": { "type": "string", "maxLength": 50 },
+        "totalAmount": { "type": "number" },
+        "totalPaid": { "type": "number" },
+        "balance": { "type": "number" }
+      },
+      "required": ["orderNumber", "businessId", "customerId", "category", "totalAmount"]
+    }
+  },
+  "firestore": {
+    "/businesses/{businessId}": {
+      "schema": "Business",
+      "description": "Collection of business accounts"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Collection of user profiles"
+    },
+    "/customers/{customerId}": {
+      "schema": "Customer",
+      "description": "Collection of customer records"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Collection of order records"
+    }
+  }
+}
