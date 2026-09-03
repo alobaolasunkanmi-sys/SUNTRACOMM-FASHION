@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { Building2, Search, Plus, ShieldCheck, ToggleLeft, ToggleRight, Loader2 } from 'lucide-react';
+import { Building2, Search, Plus, ShieldCheck, ToggleLeft, ToggleRight, Loader2, Edit3, Trash2 } from 'lucide-react';
 import OnboardBusinessModal from '../../components/OnboardBusinessModal';
+import EditBusinessModal from '../../components/EditBusinessModal';
 
 export default function SuperAdminBusinesses() {
   const { token } = useAuth();
@@ -10,6 +11,8 @@ export default function SuperAdminBusinesses() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [selectedBusiness, setSelectedBusiness] = useState<any | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   const fetchBusinesses = useCallback(() => {
     if (!token) return;
@@ -46,6 +49,11 @@ export default function SuperAdminBusinesses() {
     } finally {
       setUpdatingId(null);
     }
+  };
+
+  const handleEditClick = (b: any) => {
+    setSelectedBusiness(b);
+    setIsEditOpen(true);
   };
 
   const filtered = businesses.filter(b => {
@@ -111,7 +119,7 @@ export default function SuperAdminBusinesses() {
                   <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted">RC Number</th>
                   <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted">Contact Info</th>
                   <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted">Status</th>
-                  <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted">Action</th>
+                  <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -143,22 +151,32 @@ export default function SuperAdminBusinesses() {
                       </span>
                     </td>
                     <td className="px-4 py-4 text-right">
-                      <button
-                        type="button"
-                        disabled={updatingId === b.id}
-                        onClick={() => handleToggleStatus(b.id, b.status)}
-                        className="px-3 py-1.5 text-xs font-semibold rounded-xl border border-border hover:bg-surface transition-colors inline-flex items-center gap-1.5"
-                      >
-                        {b.status === 'active' ? (
-                          <>
-                            <ToggleRight className="w-4 h-4 text-[#4A5D4E]" /> Suspend
-                          </>
-                        ) : (
-                          <>
-                            <ToggleLeft className="w-4 h-4 text-text-muted" /> Activate
-                          </>
-                        )}
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleEditClick(b)}
+                          className="px-2.5 py-1.5 text-xs font-semibold rounded-xl border border-border hover:bg-surface transition-colors inline-flex items-center gap-1 text-primary"
+                          title="Edit business details or delete"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" /> Edit
+                        </button>
+                        <button
+                          type="button"
+                          disabled={updatingId === b.id}
+                          onClick={() => handleToggleStatus(b.id, b.status)}
+                          className="px-3 py-1.5 text-xs font-semibold rounded-xl border border-border hover:bg-surface transition-colors inline-flex items-center gap-1.5"
+                        >
+                          {b.status === 'active' ? (
+                            <>
+                              <ToggleRight className="w-4 h-4 text-[#4A5D4E]" /> Suspend
+                            </>
+                          ) : (
+                            <>
+                              <ToggleLeft className="w-4 h-4 text-text-muted" /> Activate
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -174,6 +192,17 @@ export default function SuperAdminBusinesses() {
           </div>
         )}
       </div>
+
+      <EditBusinessModal
+        business={selectedBusiness}
+        isOpen={isEditOpen}
+        onClose={() => {
+          setIsEditOpen(false);
+          setSelectedBusiness(null);
+        }}
+        onSuccess={fetchBusinesses}
+      />
     </div>
   );
 }
+

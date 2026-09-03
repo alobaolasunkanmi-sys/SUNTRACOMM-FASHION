@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { 
-  Building2, Users, DollarSign, Package, Search, ShieldCheck, ToggleLeft, ToggleRight
+  Building2, Users, DollarSign, Package, Search, ShieldCheck, ToggleLeft, ToggleRight, Edit3
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import OnboardBusinessModal from '../../components/OnboardBusinessModal';
+import EditBusinessModal from '../../components/EditBusinessModal';
 
 export default function SuperAdminDashboard() {
   const { token } = useAuth();
@@ -18,6 +19,9 @@ export default function SuperAdminDashboard() {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<string | null>(null);
+  const [selectedBusiness, setSelectedBusiness] = useState<any | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
 
   const fetchBusinesses = useCallback(() => {
     if (!token) return;
@@ -211,22 +215,34 @@ export default function SuperAdminDashboard() {
                       </span>
                     </td>
                     <td className="px-4 py-4 text-right">
-                      <button
-                        type="button"
-                        disabled={isUpdatingStatus === business.id}
-                        onClick={() => handleToggleStatus(business.id, business.status)}
-                        className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-border hover:bg-surface transition-colors inline-flex items-center gap-1.5"
-                      >
-                        {business.status === 'active' ? (
-                          <>
-                            <ToggleRight className="w-4 h-4 text-[#4A5D4E]" /> Suspend
-                          </>
-                        ) : (
-                          <>
-                            <ToggleLeft className="w-4 h-4 text-text-muted" /> Activate
-                          </>
-                        )}
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedBusiness(business);
+                            setIsEditOpen(true);
+                          }}
+                          className="px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-border hover:bg-surface transition-colors inline-flex items-center gap-1 text-primary"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" /> Edit
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isUpdatingStatus === business.id}
+                          onClick={() => handleToggleStatus(business.id, business.status)}
+                          className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-border hover:bg-surface transition-colors inline-flex items-center gap-1.5"
+                        >
+                          {business.status === 'active' ? (
+                            <>
+                              <ToggleRight className="w-4 h-4 text-[#4A5D4E]" /> Suspend
+                            </>
+                          ) : (
+                            <>
+                              <ToggleLeft className="w-4 h-4 text-text-muted" /> Activate
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -242,6 +258,17 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
       </div>
+
+      <EditBusinessModal
+        business={selectedBusiness}
+        isOpen={isEditOpen}
+        onClose={() => {
+          setIsEditOpen(false);
+          setSelectedBusiness(null);
+        }}
+        onSuccess={fetchBusinesses}
+      />
     </div>
   );
 }
+

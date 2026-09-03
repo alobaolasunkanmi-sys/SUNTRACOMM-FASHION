@@ -16,10 +16,14 @@ export default function Orders() {
     })
       .then(res => res.json())
       .then(data => {
-        setOrders(data);
+        setOrders(Array.isArray(data) ? data : []);
         setIsLoading(false);
       })
-      .catch(console.error);
+      .catch(err => {
+        console.error('Error fetching orders:', err);
+        setOrders([]);
+        setIsLoading(false);
+      });
   }, [token]);
 
   useEffect(() => {

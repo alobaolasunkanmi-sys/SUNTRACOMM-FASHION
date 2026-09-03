@@ -1,6 +1,7 @@
 {
-  "name": "",
-  "description": "",
+  "name": "FDL Solution",
+  "description": "FDL Solution - Multi-Tenant Business Management Platform",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
+

@@ -115,7 +115,7 @@ export default function RecordPaymentModal({ onSuccess }: RecordPaymentModalProp
                     <option value="">Select unpaid order</option>
                     {orders.map(o => (
                       <option key={o.id} value={o.id}>
-                        {o.orderNumber} - Balance: {Number(o.balance).toLocaleString()}
+                        {o.orderNumber} - {o.customer?.fullName || 'Customer'} (Balance: {Number(o.balance).toLocaleString()})
                       </option>
                     ))}
                   </select>

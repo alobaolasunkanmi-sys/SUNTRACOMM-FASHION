@@ -131,14 +131,64 @@ businessRouter.put('/current', async (req: AuthRequest, res) => {
   }
 });
 
+// Update business details (Super Admin)
+businessRouter.put('/:id', requireSuperAdmin, async (req, res) => {
+  const { id } = req.params;
+  const {
+    name, type, registrationNumber, ownerName, phone, whatsappNumber,
+    email, address, logoUrl, description, status, currency
+  } = req.body;
+
+  try {
+    const updateData: any = { updatedAt: new Date() };
+    if (name !== undefined) updateData.name = name;
+    if (type !== undefined) updateData.type = type;
+    if (registrationNumber !== undefined) updateData.registrationNumber = registrationNumber;
+    if (ownerName !== undefined) updateData.ownerName = ownerName;
+    if (phone !== undefined) updateData.phone = phone;
+    if (whatsappNumber !== undefined) updateData.whatsappNumber = whatsappNumber;
+    if (email !== undefined) updateData.email = email;
+    if (address !== undefined) updateData.address = address;
+    if (logoUrl !== undefined) updateData.logoUrl = logoUrl;
+    if (description !== undefined) updateData.description = description;
+    if (status !== undefined) updateData.status = status;
+    if (currency !== undefined) updateData.currency = currency;
+
+    const [updated] = await db.update(businesses)
+      .set(updateData)
+      .where(eq(businesses.id, id))
+      .returning();
+
+    if (!updated) return res.status(404).json({ error: 'Business not found' });
+    res.json(updated);
+  } catch (error) {
+    console.error('Error updating business:', error);
+    res.status(500).json({ error: 'Failed to update business' });
+  }
+});
+
+// Delete business (Super Admin)
+businessRouter.delete('/:id', requireSuperAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [deleted] = await db.delete(businesses).where(eq(businesses.id, id)).returning();
+    if (!deleted) return res.status(404).json({ error: 'Business not found' });
+    res.json({ message: 'Business deleted successfully', deletedId: id });
+  } catch (error) {
+    console.error('Error deleting business:', error);
+    res.status(500).json({ error: 'Failed to delete business' });
+  }
+});
+
 // Update business status (Super Admin)
 businessRouter.patch('/:id/status', requireSuperAdmin, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
   try {
-    const [business] = await db.update(businesses).set({ status }).where(eq(businesses.id, id)).returning();
+    const [business] = await db.update(businesses).set({ status, updatedAt: new Date() }).where(eq(businesses.id, id)).returning();
     res.json(business);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update business status' });
   }
 });
+

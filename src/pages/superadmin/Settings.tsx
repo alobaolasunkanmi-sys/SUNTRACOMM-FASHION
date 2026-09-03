@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Settings as SettingsIcon, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function SuperAdminSettings() {
-  const [platformName, setPlatformName] = useState('TailorSync');
-  const [supportEmail, setSupportEmail] = useState('support@tailorsync.com');
+  const [platformName, setPlatformName] = useState('FDL Solution');
+  const [supportEmail, setSupportEmail] = useState('support@fdlsolution.com');
   const [defaultCurrency, setDefaultCurrency] = useState('NGN');
   const [enableRegistration, setEnableRegistration] = useState(true);
   const [savedSuccess, setSavedSuccess] = useState(false);

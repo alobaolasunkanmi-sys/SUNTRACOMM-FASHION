@@ -54,7 +54,7 @@ export default function Login() {
           <Scissors className="text-white w-8 h-8" />
         </div>
         <h2 className="text-center text-3xl font-extrabold text-gray-900">
-          TailorSync
+          FDL Solution
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           The ultimate platform for tailoring & laundry businesses

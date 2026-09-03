@@ -14,10 +14,14 @@ export default function Payments() {
     })
       .then(res => res.json())
       .then(data => {
-        setPayments(data);
+        setPayments(Array.isArray(data) ? data : []);
         setIsLoading(false);
       })
-      .catch(console.error);
+      .catch(err => {
+        console.error('Error fetching payments:', err);
+        setPayments([]);
+        setIsLoading(false);
+      });
   }, [token]);
 
   useEffect(() => {

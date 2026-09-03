@@ -29,7 +29,14 @@ export default function BusinessDashboard() {
       fetch('/api/orders', { headers: { 'Authorization': `Bearer ${token}` } }),
       fetch('/api/customers', { headers: { 'Authorization': `Bearer ${token}` } })
     ])
-    .then(responses => Promise.all(responses.map(res => res.json())))
+    .then(responses => Promise.all(responses.map(async res => {
+      try {
+        if (!res.ok) return [];
+        return await res.json();
+      } catch (err) {
+        return [];
+      }
+    })))
     .then(([payments, orders, customers]) => {
       const safePayments = Array.isArray(payments) ? payments : [];
       const safeOrders = Array.isArray(orders) ? orders : [];

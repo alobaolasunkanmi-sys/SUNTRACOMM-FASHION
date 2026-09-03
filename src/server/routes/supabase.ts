@@ -5,27 +5,30 @@ import { requireAuth, requireSuperAdmin, AuthRequest } from '../middlewares/auth
 
 export const supabaseRouter = Router();
 
+const DEFAULT_SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://tabvggcparpohjfochsz.supabase.co';
+const DEFAULT_SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhYnZnZ2NwYXJwb2hqZm9jaHN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2NTUwNjksImV4cCI6MjEwMDIzMTA2OX0.QJPVYlD8HT54VaqAmx4qZGt_Q6N8_xXigE8rS9ALA9M';
+
 // Store runtime Supabase settings in memory or fallback to process.env
-let runtimeSupabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || https://tabvggcparpohjfochsz.supabase.co/rest/v1/
-let runtimeSupabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+let runtimeSupabaseUrl = DEFAULT_SUPABASE_URL;
+let runtimeSupabaseKey = DEFAULT_SUPABASE_KEY;
 let runtimeDatabaseUrl = process.env.DATABASE_URL || '';
 
 // Get Supabase connection status
 supabaseRouter.get('/status', requireAuth, async (req: AuthRequest, res) => {
-  const isUrlSet = Boolean(runtimeSupabaseUrl);
-  const isKeySet = Boolean(runtimeSupabaseKey);
+  const activeUrl = runtimeSupabaseUrl || DEFAULT_SUPABASE_URL;
+  const activeKey = runtimeSupabaseKey || DEFAULT_SUPABASE_KEY;
+  const isUrlSet = Boolean(activeUrl);
+  const isKeySet = Boolean(activeKey);
   const isDbUrlSet = Boolean(runtimeDatabaseUrl && !runtimeDatabaseUrl.includes('localhost'));
 
   let status: 'connected' | 'configured' | 'unconfigured' = 'unconfigured';
   let message = 'Supabase credentials not set.';
-  let tables: string[] = [];
 
   if (isUrlSet && isKeySet) {
     try {
-      const client = createClient(runtimeSupabaseUrl, runtimeSupabaseKey);
-      // Simple health check test
+      const client = createClient(activeUrl, activeKey);
       status = 'configured';
-      message = 'Supabase client initialized with API credentials.';
+      message = 'Supabase client initialized successfully with API credentials.';
     } catch (err: any) {
       message = `Supabase initialization error: ${err.message}`;
     }
@@ -34,10 +37,10 @@ supabaseRouter.get('/status', requireAuth, async (req: AuthRequest, res) => {
   res.json({
     status,
     message,
-    supabaseUrl: runtimeSupabaseUrl ? `${runtimeSupabaseUrl.substring(0, 15)}...` : '',
+    supabaseUrl: activeUrl ? `${activeUrl.substring(0, 20)}...` : '',
     hasKey: isKeySet,
     hasDatabaseUrl: isDbUrlSet,
-    rawSupabaseUrl: runtimeSupabaseUrl
+    rawSupabaseUrl: activeUrl
   });
 });
 
@@ -45,17 +48,20 @@ supabaseRouter.get('/status', requireAuth, async (req: AuthRequest, res) => {
 supabaseRouter.post('/configure', requireAuth, async (req: AuthRequest, res) => {
   const { supabaseUrl, supabaseKey, databaseUrl } = req.body;
 
-  if (supabaseUrl !== undefined) runtimeSupabaseUrl = supabaseUrl;
-  if (supabaseKey !== undefined) runtimeSupabaseKey = supabaseKey;
-  if (databaseUrl !== undefined) runtimeDatabaseUrl = databaseUrl;
+  if (supabaseUrl !== undefined) runtimeSupabaseUrl = supabaseUrl.trim() || DEFAULT_SUPABASE_URL;
+  if (supabaseKey !== undefined) runtimeSupabaseKey = supabaseKey.trim() || DEFAULT_SUPABASE_KEY;
+  if (databaseUrl !== undefined) runtimeDatabaseUrl = databaseUrl.trim();
 
   // Test connection
   let testSuccess = false;
   let testMessage = '';
 
-  if (runtimeSupabaseUrl && runtimeSupabaseKey) {
+  const activeUrl = runtimeSupabaseUrl || DEFAULT_SUPABASE_URL;
+  const activeKey = runtimeSupabaseKey || DEFAULT_SUPABASE_KEY;
+
+  if (activeUrl && activeKey) {
     try {
-      const client = createClient(runtimeSupabaseUrl, runtimeSupabaseKey);
+      const client = createClient(activeUrl, activeKey);
       testSuccess = true;
       testMessage = 'Successfully connected to Supabase client API!';
     } catch (err: any) {
@@ -68,8 +74,8 @@ supabaseRouter.post('/configure', requireAuth, async (req: AuthRequest, res) => 
   res.json({
     success: testSuccess,
     message: testMessage,
-    supabaseUrl: runtimeSupabaseUrl,
-    hasKey: Boolean(runtimeSupabaseKey),
+    supabaseUrl: activeUrl,
+    hasKey: Boolean(activeKey),
     hasDatabaseUrl: Boolean(runtimeDatabaseUrl)
   });
 });
@@ -85,7 +91,7 @@ supabaseRouter.post('/execute-sql', requireAuth, async (req: AuthRequest, res) =
   const dbConnectionString = connectionString || runtimeDatabaseUrl;
 
   // If direct database URL / postgres connection string is provided
-  if (dbConnectionString && !dbConnectionString.includes('localhost')) {
+  if (dbConnectionString && dbConnectionString.trim() && !dbConnectionString.includes('localhost')) {
     const pool = new pg.Pool({
       connectionString: dbConnectionString,
       ssl: { rejectUnauthorized: false }
@@ -119,24 +125,26 @@ supabaseRouter.post('/execute-sql', requireAuth, async (req: AuthRequest, res) =
     }
   }
 
+  const activeUrl = runtimeSupabaseUrl || DEFAULT_SUPABASE_URL;
+  const activeKey = runtimeSupabaseKey || DEFAULT_SUPABASE_KEY;
+
   // If using Supabase REST Client
-  if (runtimeSupabaseUrl && runtimeSupabaseKey) {
+  if (activeUrl && activeKey) {
     try {
-      const supabase = createClient(runtimeSupabaseUrl, runtimeSupabaseKey);
+      const supabase = createClient(activeUrl, activeKey);
       
-      // Attempt RPC or basic sql query if extensions/rpc available, or report status
-      res.json({
+      return res.json({
         success: true,
-        message: 'SQL script received and validated with Supabase client!',
-        note: 'To execute raw DDL (CREATE TABLE, ALTER TABLE, etc.) directly against PostgreSQL, provide your Supabase Direct DB Connection String (e.g., postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres) or paste the script into Supabase SQL Editor.',
+        message: 'SQL script validated with Supabase client!',
+        note: 'To execute raw DDL queries (CREATE TABLE, DROP TRIGGER, ALTER TABLE, etc.) directly against PostgreSQL, paste your script into Supabase SQL Editor (https://database.new) or fill in your PostgreSQL Connection String in the form above.',
         scriptPreview: sqlScript.substring(0, 200) + (sqlScript.length > 200 ? '...' : '')
       });
     } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: err.message });
     }
-  } else {
-    res.status(400).json({
-      error: 'No Supabase API URL / Key or PostgreSQL Connection String configured yet. Please enter your Supabase connection details above.'
-    });
   }
+
+  res.status(400).json({
+    error: 'No Supabase API URL / Key or PostgreSQL Connection String configured yet. Please enter your Supabase connection details in the form above.'
+  });
 });

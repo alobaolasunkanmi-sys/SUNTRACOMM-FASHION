@@ -540,7 +540,7 @@ SELECT * FROM customers;`
               <input
                 type="text"
                 placeholder="https://xyzcompany.supabase.co"
-                value={supabaseUrl}https://tabvggcparpohjfochsz.supabase.co/rest/v1/
+                value={supabaseUrl}
                 onChange={(e) => setSupabaseUrl(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background text-xs focus:border-primary focus:outline-none"
               />

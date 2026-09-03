@@ -52,7 +52,6 @@ function AppRoutes() {
         <Route path="/business/customers" element={<Customers />} />
         <Route path="/business/orders" element={<Orders />} />
         <Route path="/business/payments" element={<Payments />} />
-        <Route path="/business/supabase" element={<SupabaseConnect />} />
         <Route path="/business/settings" element={<Settings />} />
       </Route>
 

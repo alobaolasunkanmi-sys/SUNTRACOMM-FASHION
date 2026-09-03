@@ -23,7 +23,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { name: 'Customers', href: '/business/customers', icon: Users },
     { name: 'Orders', href: '/business/orders', icon: Scissors },
     { name: 'Payments', href: '/business/payments', icon: CreditCard },
-    { name: 'Supabase DB', href: '/business/supabase', icon: Database },
     { name: 'Settings', href: '/business/settings', icon: Settings },
   ];
 
@@ -40,7 +39,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
           ) : null}
           <span className="text-xl font-serif italic text-primary font-bold tracking-tight line-clamp-2">
-            {user?.role === 'superadmin' ? 'TailorSync Admin' : business?.name || 'TailorSync'}
+            {user?.role === 'superadmin' ? 'FDL Solution Admin' : business?.name || 'FDL Solution'}
           </span>
         </div>
         

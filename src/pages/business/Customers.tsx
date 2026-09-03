@@ -16,10 +16,14 @@ export default function Customers() {
     })
       .then(res => res.json())
       .then(data => {
-        setCustomers(data);
+        setCustomers(Array.isArray(data) ? data : []);
         setIsLoading(false);
       })
-      .catch(console.error);
+      .catch(err => {
+        console.error('Error fetching customers:', err);
+        setCustomers([]);
+        setIsLoading(false);
+      });
   }, [token]);
 
   useEffect(() => {
