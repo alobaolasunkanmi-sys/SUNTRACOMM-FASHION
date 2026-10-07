@@ -134,6 +134,27 @@ export const auditLogs = pgTable('audit_logs', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// 10. APP SETTINGS (Server-side configuration & credentials storage in database)
+export const appSettings = pgTable('app_settings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  key: text('key').unique().notNull(),
+  value: text('value').notNull(),
+  category: text('category').default('general'), // 'database', 'auth', 'integration', 'general'
+  description: text('description'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// 11. BACKEND STORE (Universal server-side data entry table for storing arbitrary data entities)
+export const backendStore = pgTable('backend_store', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  collection: text('collection').notNull(), // 'entries', 'configs', 'metadata', etc.
+  key: text('key').notNull(),
+  data: json('data').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // Relationships
 export const businessRelations = relations(businesses, ({ many }) => ({
   users: many(users),
