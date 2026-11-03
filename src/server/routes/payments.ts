@@ -19,8 +19,9 @@ paymentRouter.get('/', async (req: AuthRequest, res) => {
       }
     });
     res.json(list);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (error: any) {
+    console.error('Error fetching payments:', error);
+    res.status(500).json({ error: 'Server error fetching payments' });
   }
 });
 
@@ -28,6 +29,15 @@ paymentRouter.post('/', async (req: AuthRequest, res) => {
   if (!req.user?.businessId) return res.status(403).json({ error: 'No business context' });
   const { orderId, amount, method, reference } = req.body;
   
+  if (!orderId || !amount) {
+    return res.status(400).json({ error: 'Order ID and payment amount are required' });
+  }
+
+  const numericAmount = Number(amount);
+  if (isNaN(numericAmount) || numericAmount <= 0) {
+    return res.status(400).json({ error: 'Payment amount must be greater than zero' });
+  }
+
   try {
     // Check order exists
     const [order] = await db.select().from(orders)
@@ -40,23 +50,44 @@ paymentRouter.post('/', async (req: AuthRequest, res) => {
       businessId: req.user.businessId,
       orderId,
       customerId: order.customerId,
-      amount: amount.toString(),
-      method,
-      reference,
+      amount: numericAmount.toString(),
+      method: method || 'transfer',
+      reference: reference || null,
       recordedById: req.user.userId
     }).returning();
     
     // Update order balance
-    const newPaid = Number(order.totalPaid) + Number(amount);
-    const newBalance = Number(order.totalAmount) - newPaid;
+    const currentPaid = Number(order.totalPaid || 0);
+    const totalOrderAmount = Number(order.totalAmount || 0);
+    const newPaid = currentPaid + numericAmount;
+    const newBalance = Math.max(0, totalOrderAmount - newPaid);
     
     await db.update(orders).set({
       totalPaid: newPaid.toString(),
-      balance: newBalance.toString()
+      balance: newBalance.toString(),
+      updatedAt: new Date()
     }).where(eq(orders.id, orderId));
+
+    // Update customer outstanding balance and last payment date
+    try {
+      const [customer] = await db.select().from(customers)
+        .where(eq(customers.id, order.customerId));
+      if (customer) {
+        const curCustomerBalance = Number(customer.outstandingBalance || 0);
+        const updatedCustomerBalance = Math.max(0, curCustomerBalance - numericAmount);
+        await db.update(customers).set({
+          outstandingBalance: updatedCustomerBalance.toString(),
+          lastPaymentDate: new Date(),
+          updatedAt: new Date()
+        }).where(eq(customers.id, order.customerId));
+      }
+    } catch (custErr) {
+      console.warn('Customer balance sync warning on payment:', custErr);
+    }
     
-    res.json(payment);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    res.status(201).json(payment);
+  } catch (error: any) {
+    console.error('Error recording payment:', error);
+    res.status(500).json({ error: error?.message || 'Server error recording payment' });
   }
 });
