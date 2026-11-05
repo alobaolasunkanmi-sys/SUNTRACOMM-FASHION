@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://YOUR-PUBLIC-BACKEND-URL.run.app/api/$1"
+      "destination": "https://fash-laund.ai.studio/api/$1"
     },
     {
       "source": "/(.*)",
