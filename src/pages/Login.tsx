@@ -22,6 +22,16 @@ export default function Login() {
         body: JSON.stringify({ email, password }),
       });
       
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        const text = await res.text();
+        throw new Error(
+          text.includes('The page') || text.includes('<!DOCTYPE')
+            ? 'Backend API unreachable: The server returned an HTML error or redirect instead of JSON. Ensure your Cloud Run backend is deployed and accessible.'
+            : text || 'Invalid server response'
+        );
+      }
+
       const data = await res.json();
       
       if (!res.ok) {
